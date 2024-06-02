@@ -1,23 +1,10 @@
 package org.example.model;
 
-import javax.persistence.*;
-
-@Entity
-@Table(name = "files")
 public class File {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "directory_id", nullable = false)
     private Directory directory;
-
-    @Column(name = "name", nullable = false)
     private String name;
-
-    @Column(name = "size", nullable = false)
     private int size;
 
     public int getId() {

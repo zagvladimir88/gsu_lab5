@@ -1,0 +1,13 @@
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="org.example.model.File" table="files">
+        <id name="id" type="int">
+            <generator class="identity"/>
+        </id>
+        <many-to-one name="directory" class="org.example.model.Directory" column="directory_id" not-null="true" fetch="select"/>
+        <property name="name" column="name" not-null="true"/>
+        <property name="size" column="size" not-null="true"/>
+    </class>
+</hibernate-mapping>

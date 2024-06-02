@@ -1,28 +1,14 @@
 package org.example.model;
 
-import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
-@Entity
-@Table(name = "directories")
 public class Directory {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
     private Directory parent;
-
-    @OneToMany(mappedBy = "parent",fetch = FetchType.EAGER)
     private Set<Directory> subdirectories = new HashSet<>();
-
-    @OneToMany(mappedBy = "directory", fetch = FetchType.EAGER)
     private Set<File> files = new HashSet<>();
-
-    @Column(name = "name", nullable = false)
     private String name;
 
     // Getters and setters
