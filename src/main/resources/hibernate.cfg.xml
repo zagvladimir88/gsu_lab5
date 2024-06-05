@@ -4,7 +4,7 @@
 <hibernate-configuration>
     <session-factory>
         <property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
-        <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/FileSystem</property>
+        <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/dictionary</property>
         <property name="hibernate.connection.username">root</property>
         <property name="hibernate.connection.password">1234</property>
 
@@ -14,11 +14,12 @@
         <property name="hibernate.c3p0.max_statements">50</property>
         <property name="hibernate.c3p0.idle_test_period">3000</property>
 
-        <property name="hibernate.show_sql">true</property>
+        <property name="hibernate.show_sql">false</property>
 
         <property name="hibernate.hbm2ddl.auto">update</property>
 
-        <mapping class="org.example.model.Directory"/>
-        <mapping class="org.example.model.File"/>
+        <mapping class="org.example.model.EnglishWord"/>
+        <mapping class="org.example.model.RussianWord"/>
+        <mapping class="org.example.model.Translation"/>
     </session-factory>
 </hibernate-configuration>

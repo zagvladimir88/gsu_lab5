@@ -1,168 +1,142 @@
 package org.example;
 
-import org.example.dao.DirectoryDAO;
-import org.example.dao.FileDAO;
-import org.example.model.Directory;
-import org.example.model.File;
-import org.example.service.DirectoryService;
-import org.example.service.FileService;
+import org.example.model.EnglishWord;
+import org.example.model.RussianWord;
+import org.example.model.Translation;
+import org.example.service.EnglishWordService;
+import org.example.service.RussianWordService;
+import org.example.service.TranslationService;
 import org.hibernate.SessionFactory;
 
+import java.util.List;
 import java.util.Scanner;
-import java.util.Set;
 
 public class Main {
     public static void main(String[] args) {
+        // Инициализация и получение сервисов и фабрики сессий Hibernate
         SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
-        DirectoryDAO directoryDAO = new DirectoryDAO(sessionFactory);
-        FileDAO fileDAO = new FileDAO(sessionFactory);
-        DirectoryService directoryService = new DirectoryService(directoryDAO, fileDAO,sessionFactory);
-        FileService fileService = new FileService(fileDAO);
+        EnglishWordService englishWordService = new EnglishWordService(sessionFactory);
+        RussianWordService russianWordService = new RussianWordService(sessionFactory);
+        TranslationService translationService = new TranslationService(sessionFactory);
 
         Scanner scanner = new Scanner(System.in);
 
-        while (true) {
-            System.out.println("Choose an option:");
-            System.out.println("1. Add Directory");
-            System.out.println("2. Add File");
-            System.out.println("3. View Directory");
-            System.out.println("4. View File");
-            System.out.println("5. Update Directory");
-            System.out.println("6. Update File");
-            System.out.println("7. Delete Directory");
-            System.out.println("8. Delete File");
-            System.out.println("9. Get Full Path");
-            System.out.println("10. Count Files in Directory");
-            System.out.println("11. Calculate Disk Space");
-            System.out.println("12. Find Files by Mask");
-            System.out.println("13. Move Files and Subdirectories");
-            System.out.println("14. Delete Files and Directories");
-            System.out.println("0. Exit");
+        boolean exit = false;
+        while (!exit) {
+            System.out.println("Выберите действие:");
+            System.out.println("1. Добавить слово и перевод");
+            System.out.println("2. Удалить слово и перевод");
+            System.out.println("3. Обновить слово и перевод");
+            System.out.println("4. Вывести все переводы для русских слов");
+            System.out.println("5. Вывести все переводы для английских слов");
+
             int choice = scanner.nextInt();
             scanner.nextLine();
 
             switch (choice) {
                 case 1:
-                    System.out.println("Enter directory name:");
-                    String dirName = scanner.nextLine();
-                    Directory parentDir = null;
-                    System.out.println("Enter parent directory ID (0 for no parent):");
-                    int parentId = scanner.nextInt();
-                    if (parentId != 0) {
-                        parentDir = directoryService.getDirectory(parentId);
-                    }
-                    Directory newDir = new Directory(parentDir, dirName);
-                    directoryService.addDirectory(newDir);
+                    System.out.println("Введите слово на английском:");
+                    String englishWord = scanner.nextLine();
+
+                    System.out.println("Введите слово на русском:");
+                    String russianWord = scanner.nextLine();
+
+                    EnglishWord engWord = new EnglishWord();
+                    engWord.setWord(englishWord);
+                    englishWordService.addOrUpdateEnglishWord(engWord);
+
+                    RussianWord rusWord = new RussianWord();
+                    rusWord.setWord(russianWord);
+                    russianWordService.addOrUpdateRussianWord(rusWord);
+
+                    Translation translation = new Translation();
+                    translation.setEnglishWord(engWord);
+                    translation.setRussianWord(rusWord);
+                    translationService.addOrUpdateTranslation(translation);
+
+                    System.out.println("Слово и перевод добавлены успешно.");
                     break;
                 case 2:
-                    System.out.println("Enter file name:");
-                    String fileName = scanner.nextLine();
-                    System.out.println("Enter file size:");
-                    int fileSize = scanner.nextInt();
-                    System.out.println("Enter directory ID:");
-                    int dirId = scanner.nextInt();
-                    Directory directory = directoryService.getDirectory(dirId);
-                    File newFile = new File(directory, fileName, fileSize);
-                    fileService.addFile(newFile);
+                    System.out.println("Введите id слова на английском или русском:");
+                    int wordId = scanner.nextInt();
+                    scanner.nextLine();
+
+                    russianWordService.deleteRussianWordById(wordId);
+                    englishWordService.deleteEnglishWordById(wordId);
+
+                    System.out.println("Слово и перевод удалены успешно.");
                     break;
                 case 3:
-                    System.out.println("Enter directory ID:");
-                    int viewDirId = scanner.nextInt();
-                    Directory viewDir = directoryService.getDirectory(viewDirId);
-                    System.out.println("Directory: " + viewDir.getName());
-                    break;
-                case 4:
-                    System.out.println("Enter file ID:");
-                    int viewFileId = scanner.nextInt();
-                    File viewFile = fileService.getFile(viewFileId);
-                    System.out.println("File: " + viewFile.getName() + ", Size: " + viewFile.getSize());
-                    break;
-                case 5:
-                    System.out.println("Enter directory ID:");
-                    int updateDirId = scanner.nextInt();
-                    scanner.nextLine(); // Consume newline
-                    System.out.println("Enter new directory name:");
-                    String newDirName = scanner.nextLine();
-                    Directory updateDir = directoryService.getDirectory(updateDirId);
-                    updateDir.setName(newDirName);
-                    directoryService.updateDirectory(updateDir);
-                    break;
-                case 6:
-                    System.out.println("Enter file ID:");
-                    int updateFileId = scanner.nextInt();
-                    scanner.nextLine(); // Consume newline
-                    System.out.println("Enter new file name:");
-                    String newFileName = scanner.nextLine();
-                    System.out.println("Enter new file size:");
-                    int newFileSize = scanner.nextInt();
-                    File updateFile = fileService.getFile(updateFileId);
-                    updateFile.setName(newFileName);
-                    updateFile.setSize(newFileSize);
-                    fileService.updateFile(updateFile);
-                    break;
-                case 7:
-                    System.out.println("Enter directory ID:");
-                    int deleteDirId = scanner.nextInt();
-                    directoryService.deleteDirectory(deleteDirId);
-                    break;
-                case 8:
-                    System.out.println("Enter file ID:");
-                    int deleteFileId = scanner.nextInt();
-                    fileService.deleteFile(deleteFileId);
-                    break;
-                case 9:
-                    System.out.println("Enter directory ID:");
-                    int pathDirId = scanner.nextInt();
-                    String fullPath = directoryService.getFullPath(pathDirId);
-                    System.out.println("Full path: " + fullPath);
-                    break;
-                case 10:
-                    System.out.println("Enter directory ID:");
-                    int countDirId = scanner.nextInt();
-                    int fileCount = directoryService.countFilesInDirectory(countDirId);
-                    System.out.println("Number of files in directory: " + fileCount);
-                    break;
-                case 11:
-                    System.out.println("Enter directory ID:");
-                    int sizeDirId = scanner.nextInt();
-                    int diskSpace = directoryService.calculateDiskSpace(sizeDirId);
-                    System.out.println("Total disk space used: " + diskSpace + " bytes");
-                    break;
-                case 12:
-                    System.out.println("Enter directory ID:");
-                    int maskDirId = scanner.nextInt();
+                    System.out.println("Введите id слова на английском или русском:");
+                    int wordIdToUpdate = scanner.nextInt();
                     scanner.nextLine();
-                    System.out.println("Enter file mask:");
-                    String mask = scanner.nextLine();
-                    Set<File> files = directoryService.findFilesByMask(maskDirId, mask);
-                    System.out.println("Files matching the mask:");
-                    for (File file : files) {
-                        System.out.println(file.getName());
+
+                    EnglishWord existingEngWord = englishWordService.getEnglishWordById(wordIdToUpdate);
+                    RussianWord existingRusWord = russianWordService.getRussianWordById(wordIdToUpdate);
+
+                    if (existingEngWord != null && existingRusWord != null) {
+                        System.out.println("Введите новое слово на английском:");
+                        String updatedEnglishWord = scanner.nextLine();
+
+                        System.out.println("Введите новое слово на русском:");
+                        String updatedRussianWord = scanner.nextLine();
+
+                        // Обновление слова на английском
+                        existingEngWord.setWord(updatedEnglishWord);
+                        englishWordService.addOrUpdateEnglishWord(existingEngWord);
+
+                        // Обновление слова на русском
+                        existingRusWord.setWord(updatedRussianWord);
+                        russianWordService.addOrUpdateRussianWord(existingRusWord);
+
+                        System.out.println("Слово и перевод обновлены успешно.");
+                    } else {
+                        System.out.println("Слово или перевод с указанным id не найдены.");
                     }
                     break;
-                case 13:
-                    System.out.println("Enter source directory ID:");
-                    int sourceDirId = scanner.nextInt();
-                    System.out.println("Enter target directory ID:");
-                    int targetDirId = scanner.nextInt();
-                    directoryService.moveFilesAndSubdirectories(sourceDirId, targetDirId);
-                    System.out.println("Files and subdirectories moved successfully.");
+                case 4:
+                    // Вывод всех переводов для русских слов
+                    System.out.println("Введите слова через пробел:");
+                    String[] words = scanner.nextLine().split("\\s+");
+                    for (String word : words) {
+                        List<EnglishWord> englishWordByRusWord = englishWordService.getEnglishWordByRusWord(word);
+                        if (!englishWordByRusWord.isEmpty()) {
+                            System.out.println("Переводы для слова \"" + word + "\":");
+                            for (EnglishWord translate : englishWordByRusWord) {
+                                System.out.println(translate.getWord());
+                            }
+                        } else {
+                            System.out.println("Слово с id " + word + " не найдено.");
+                        }
+                    }
                     break;
-                case 14:
-                    System.out.println("Enter directory ID:");
-                    int delDirId = scanner.nextInt();
-//                    directoryService.deleteFilesAndSubdirectories(delDirId);
-                    directoryDAO.deleteDirectoryWithNativeQuery(delDirId);
-                    System.out.println("Files and subdirectories deleted successfully.");
+                case 5:
+                    System.out.println("Введите слова через пробел:");
+                    String[] engWords = scanner.nextLine().split("\\s+");
+                    for (String engWordForTranslate : engWords) {
+                        List<RussianWord> russianWords = englishWordService.getRusWordsByEndWord(engWordForTranslate);
+                        if (!russianWords.isEmpty()) {
+                            System.out.println("Переводы для слова \"" + engWordForTranslate + "\":");
+                            for (RussianWord translate : russianWords) {
+                                System.out.println(translate.getWord());
+                            }
+                        } else {
+                            System.out.println("Слово с id " + engWordForTranslate + " не найдено.");
+                        }
+                    }
                     break;
-                case 0:
-                    System.out.println("Exiting...");
-                    sessionFactory.close();
-                    scanner.close();
-                    return;
                 default:
-                    System.out.println("Invalid option. Please try again.");
+                    System.out.println("Неверный ввод, попробуйте еще раз.");
+            }
+
+            System.out.println("Продолжить? (да/нет)");
+            String cont = scanner.nextLine();
+            if (!cont.equalsIgnoreCase("да")) {
+                exit = true;
             }
         }
+
+        sessionFactory.close();
     }
 }
+
