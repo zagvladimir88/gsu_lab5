@@ -1,168 +1,288 @@
 package org.example;
 
-import org.example.dao.DirectoryDAO;
-import org.example.dao.FileDAO;
-import org.example.model.Directory;
-import org.example.model.File;
-import org.example.service.DirectoryService;
-import org.example.service.FileService;
-import org.hibernate.SessionFactory;
+import org.example.model.Manufacturer;
+import org.example.model.Souvenir;
+import org.example.service.ManufacturerService;
+import org.example.service.SouvenirService;
 
+import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 import java.util.Scanner;
-import java.util.Set;
 
 public class Main {
+
+    private static ManufacturerService manufacturerService = new ManufacturerService();
+    private static SouvenirService souvenirService = new SouvenirService();
+    private static Scanner scanner = new Scanner(System.in);
+
     public static void main(String[] args) {
-        SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
-        DirectoryDAO directoryDAO = new DirectoryDAO(sessionFactory);
-        FileDAO fileDAO = new FileDAO(sessionFactory);
-        DirectoryService directoryService = new DirectoryService(directoryDAO, fileDAO,sessionFactory);
-        FileService fileService = new FileService(fileDAO);
-
-        Scanner scanner = new Scanner(System.in);
-
         while (true) {
-            System.out.println("Choose an option:");
-            System.out.println("1. Add Directory");
-            System.out.println("2. Add File");
-            System.out.println("3. View Directory");
-            System.out.println("4. View File");
-            System.out.println("5. Update Directory");
-            System.out.println("6. Update File");
-            System.out.println("7. Delete Directory");
-            System.out.println("8. Delete File");
-            System.out.println("9. Get Full Path");
-            System.out.println("10. Count Files in Directory");
-            System.out.println("11. Calculate Disk Space");
-            System.out.println("12. Find Files by Mask");
-            System.out.println("13. Move Files and Subdirectories");
-            System.out.println("14. Delete Files and Directories");
-            System.out.println("0. Exit");
+            System.out.println("Меню:");
+            System.out.println("1. Добавить производителя");
+            System.out.println("2. Добавить сувенир");
+            System.out.println("3. Обновить производителя");
+            System.out.println("4. Обновить сувенир");
+            System.out.println("5. Удалить производителя");
+            System.out.println("6. Удалить сувенир");
+            System.out.println("7. Вывести информацию о сувенирах заданного производителя");
+            System.out.println("8. Вывести информацию о сувенирах, произведенных в заданной стране");
+            System.out.println("9. Вывести информацию о производителях, чьи цены на сувениры меньше заданной");
+            System.out.println("10. Вывести информацию о производителях заданного сувенира, произведенного в заданном году");
+            System.out.println("11. Вывести всех производителей");
+            System.out.println("12. Вывести все сувениры");
+            System.out.println("0. Выход");
+
             int choice = scanner.nextInt();
-            scanner.nextLine();
+            scanner.nextLine(); // Consume newline
 
             switch (choice) {
                 case 1:
-                    System.out.println("Enter directory name:");
-                    String dirName = scanner.nextLine();
-                    Directory parentDir = null;
-                    System.out.println("Enter parent directory ID (0 for no parent):");
-                    int parentId = scanner.nextInt();
-                    if (parentId != 0) {
-                        parentDir = directoryService.getDirectory(parentId);
-                    }
-                    Directory newDir = new Directory(parentDir, dirName);
-                    directoryService.addDirectory(newDir);
+                    addManufacturer();
                     break;
                 case 2:
-                    System.out.println("Enter file name:");
-                    String fileName = scanner.nextLine();
-                    System.out.println("Enter file size:");
-                    int fileSize = scanner.nextInt();
-                    System.out.println("Enter directory ID:");
-                    int dirId = scanner.nextInt();
-                    Directory directory = directoryService.getDirectory(dirId);
-                    File newFile = new File(directory, fileName, fileSize);
-                    fileService.addFile(newFile);
+                    addSouvenir();
                     break;
                 case 3:
-                    System.out.println("Enter directory ID:");
-                    int viewDirId = scanner.nextInt();
-                    Directory viewDir = directoryService.getDirectory(viewDirId);
-                    System.out.println("Directory: " + viewDir.getName());
+                    updateManufacturer();
                     break;
                 case 4:
-                    System.out.println("Enter file ID:");
-                    int viewFileId = scanner.nextInt();
-                    File viewFile = fileService.getFile(viewFileId);
-                    System.out.println("File: " + viewFile.getName() + ", Size: " + viewFile.getSize());
+                    updateSouvenir();
                     break;
                 case 5:
-                    System.out.println("Enter directory ID:");
-                    int updateDirId = scanner.nextInt();
-                    scanner.nextLine(); // Consume newline
-                    System.out.println("Enter new directory name:");
-                    String newDirName = scanner.nextLine();
-                    Directory updateDir = directoryService.getDirectory(updateDirId);
-                    updateDir.setName(newDirName);
-                    directoryService.updateDirectory(updateDir);
+                    deleteManufacturer();
                     break;
                 case 6:
-                    System.out.println("Enter file ID:");
-                    int updateFileId = scanner.nextInt();
-                    scanner.nextLine(); // Consume newline
-                    System.out.println("Enter new file name:");
-                    String newFileName = scanner.nextLine();
-                    System.out.println("Enter new file size:");
-                    int newFileSize = scanner.nextInt();
-                    File updateFile = fileService.getFile(updateFileId);
-                    updateFile.setName(newFileName);
-                    updateFile.setSize(newFileSize);
-                    fileService.updateFile(updateFile);
+                    deleteSouvenir();
                     break;
                 case 7:
-                    System.out.println("Enter directory ID:");
-                    int deleteDirId = scanner.nextInt();
-                    directoryService.deleteDirectory(deleteDirId);
+                    getSouvenirsByManufacturer();
                     break;
                 case 8:
-                    System.out.println("Enter file ID:");
-                    int deleteFileId = scanner.nextInt();
-                    fileService.deleteFile(deleteFileId);
+                    getSouvenirsByCountry();
                     break;
                 case 9:
-                    System.out.println("Enter directory ID:");
-                    int pathDirId = scanner.nextInt();
-                    String fullPath = directoryService.getFullPath(pathDirId);
-                    System.out.println("Full path: " + fullPath);
+                    getManufacturersBySouvenirPriceLessThan();
                     break;
                 case 10:
-                    System.out.println("Enter directory ID:");
-                    int countDirId = scanner.nextInt();
-                    int fileCount = directoryService.countFilesInDirectory(countDirId);
-                    System.out.println("Number of files in directory: " + fileCount);
+                    getManufacturersBySouvenirAndYear();
                     break;
                 case 11:
-                    System.out.println("Enter directory ID:");
-                    int sizeDirId = scanner.nextInt();
-                    int diskSpace = directoryService.calculateDiskSpace(sizeDirId);
-                    System.out.println("Total disk space used: " + diskSpace + " bytes");
+                    getAllManufacturers();
                     break;
                 case 12:
-                    System.out.println("Enter directory ID:");
-                    int maskDirId = scanner.nextInt();
-                    scanner.nextLine();
-                    System.out.println("Enter file mask:");
-                    String mask = scanner.nextLine();
-                    Set<File> files = directoryService.findFilesByMask(maskDirId, mask);
-                    System.out.println("Files matching the mask:");
-                    for (File file : files) {
-                        System.out.println(file.getName());
-                    }
-                    break;
-                case 13:
-                    System.out.println("Enter source directory ID:");
-                    int sourceDirId = scanner.nextInt();
-                    System.out.println("Enter target directory ID:");
-                    int targetDirId = scanner.nextInt();
-                    directoryService.moveFilesAndSubdirectories(sourceDirId, targetDirId);
-                    System.out.println("Files and subdirectories moved successfully.");
-                    break;
-                case 14:
-                    System.out.println("Enter directory ID:");
-                    int delDirId = scanner.nextInt();
-//                    directoryService.deleteFilesAndSubdirectories(delDirId);
-                    directoryDAO.deleteDirectoryWithNativeQuery(delDirId);
-                    System.out.println("Files and subdirectories deleted successfully.");
+                    getAllSouvenirs();
                     break;
                 case 0:
-                    System.out.println("Exiting...");
-                    sessionFactory.close();
-                    scanner.close();
+                    HibernateUtil.shutdown();
                     return;
                 default:
-                    System.out.println("Invalid option. Please try again.");
+                    System.out.println("Неверный выбор. Пожалуйста, попробуйте снова.");
             }
         }
+    }
+
+    private static void addManufacturer() {
+        System.out.println("Введите название производителя:");
+        String name = scanner.nextLine();
+        System.out.println("Введите страну производителя:");
+        String country = scanner.nextLine();
+        Manufacturer manufacturer = new Manufacturer();
+        manufacturer.setName(name);
+        manufacturer.setCountry(country);
+        manufacturerService.addManufacturer(manufacturer);
+        System.out.println("Производитель добавлен.");
+    }
+
+    private static void addSouvenir() {
+        System.out.println("Введите название сувенира:");
+        String name = scanner.nextLine();
+        System.out.println("Введите ID производителя:");
+        int manufacturerId = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+        System.out.println("Введите дату выпуска (гггг-мм-дд):");
+        String releaseDateStr = scanner.nextLine();
+        System.out.println("Введите цену:");
+        BigDecimal price = scanner.nextBigDecimal();
+        scanner.nextLine(); // Consume newline
+
+        try {
+            Date releaseDate = new SimpleDateFormat("yyyy-MM-dd").parse(releaseDateStr);
+            Manufacturer manufacturer = manufacturerService.getManufacturer(manufacturerId);
+            if (manufacturer == null) {
+                System.out.println("Производитель с таким ID не найден.");
+                return;
+            }
+
+            Souvenir souvenir = new Souvenir();
+            souvenir.setName(name);
+            souvenir.setManufacturer(manufacturer);
+            souvenir.setReleaseDate(releaseDate);
+            souvenir.setPrice(price);
+            souvenirService.addSouvenir(souvenir);
+            System.out.println("Сувенир добавлен.");
+        } catch (ParseException e) {
+            System.out.println("Неверный формат даты.");
+        }
+    }
+
+    private static void updateManufacturer() {
+        System.out.println("Введите ID производителя для обновления:");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        Manufacturer manufacturer = manufacturerService.getManufacturer(id);
+        if (manufacturer == null) {
+            System.out.println("Производитель с таким ID не найден.");
+            return;
+        }
+
+        System.out.println("Введите новое название производителя:");
+        String name = scanner.nextLine();
+        System.out.println("Введите новую страну производителя:");
+        String country = scanner.nextLine();
+
+        manufacturer.setName(name);
+        manufacturer.setCountry(country);
+        manufacturerService.updateManufacturer(manufacturer);
+        System.out.println("Производитель обновлен.");
+    }
+
+    private static void updateSouvenir() {
+        System.out.println("Введите ID сувенира для обновления:");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        Souvenir souvenir = souvenirService.getSouvenir(id);
+        if (souvenir == null) {
+            System.out.println("Сувенир с таким ID не найден.");
+            return;
+        }
+
+        System.out.println("Введите новое название сувенира:");
+        String name = scanner.nextLine();
+        System.out.println("Введите новую дату выпуска (гггг-мм-дд):");
+        String releaseDateStr = scanner.nextLine();
+        System.out.println("Введите новую цену:");
+        BigDecimal price = scanner.nextBigDecimal();
+        scanner.nextLine(); // Consume newline
+
+        try {
+            Date releaseDate = new SimpleDateFormat("yyyy-MM-dd").parse(releaseDateStr);
+            souvenir.setName(name);
+            souvenir.setReleaseDate(releaseDate);
+            souvenir.setPrice(price);
+            souvenirService.updateSouvenir(souvenir);
+            System.out.println("Сувенир обновлен.");
+        } catch (ParseException e) {
+            System.out.println("Неверный формат даты.");
+        }
+    }
+
+    private static void deleteManufacturer() {
+        System.out.println("Введите ID производителя для удаления:");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        manufacturerService.deleteManufacturer(id);
+        System.out.println("Производитель и его сувениры удалены.");
+    }
+
+    private static void deleteSouvenir() {
+        System.out.println("Введите ID сувенира для удаления:");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        souvenirService.deleteSouvenir(id);
+        System.out.println("Сувенир удален.");
+    }
+
+    private static void getSouvenirsByManufacturer() {
+        System.out.println("Введите ID производителя:");
+        int manufacturerId = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        List<Souvenir> souvenirs = souvenirService.getSouvenirsByManufacturer(manufacturerId);
+        if (souvenirs == null || souvenirs.isEmpty()) {
+            System.out.println("Сувениры не найдены.");
+            return;
+        }
+
+        souvenirs.forEach(souvenir -> System.out.println("ID: " + souvenir.getId() + ", Название: " + souvenir.getName() +
+                ", Дата выпуска: " + souvenir.getReleaseDate() + ", Цена: " + souvenir.getPrice()));
+    }
+
+    private static void getSouvenirsByCountry() {
+        System.out.println("Введите страну:");
+        String country = scanner.nextLine();
+
+        List<Souvenir> souvenirs = souvenirService.getSouvenirsByCountry(country);
+        if (souvenirs == null || souvenirs.isEmpty()) {
+            System.out.println("Сувениры не найдены.");
+            return;
+        }
+
+        souvenirs.forEach(souvenir -> System.out.println("ID: " + souvenir.getId() + ", Название: " + souvenir.getName() +
+                ", Дата выпуска: " + souvenir.getReleaseDate() + ", Цена: " + souvenir.getPrice()));
+    }
+
+    private static void getManufacturersBySouvenirPriceLessThan() {
+        System.out.println("Введите цену:");
+        double priceInput = scanner.nextDouble();
+        scanner.nextLine(); // Consume newline
+
+        // Преобразуем значение double в BigDecimal
+        BigDecimal price = BigDecimal.valueOf(priceInput);
+
+        List<Manufacturer> manufacturers = manufacturerService.getManufacturersBySouvenirPriceLessThan(price);
+        if (manufacturers == null || manufacturers.isEmpty()) {
+            System.out.println("Производители не найдены.");
+            return;
+        }
+
+        manufacturers.forEach(manufacturer -> System.out.println("ID: " + manufacturer.getId() + ", Название: " +
+                manufacturer.getName() + ", Страна: " + manufacturer.getCountry()));
+    }
+
+
+    private static void getManufacturersBySouvenirAndYear() {
+        System.out.println("Введите название сувенира:");
+        String souvenirName = scanner.nextLine();
+        System.out.println("Введите год выпуска:");
+        int year = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        List<Manufacturer> manufacturers = manufacturerService.getManufacturersBySouvenirAndYear(souvenirName, year);
+        if (manufacturers == null || manufacturers.isEmpty()) {
+            System.out.println("Производители не найдены.");
+            return;
+        }
+
+        manufacturers.forEach(manufacturer -> System.out.println("ID: " + manufacturer.getId() + ", Название: " +
+                manufacturer.getName() + ", Страна: " + manufacturer.getCountry()));
+    }
+
+    private static void getAllManufacturers() {
+        List<Manufacturer> manufacturers = manufacturerService.getAllManufacturers();
+        if (manufacturers == null || manufacturers.isEmpty()) {
+            System.out.println("Производители не найдены.");
+            return;
+        }
+
+        manufacturers.forEach(manufacturer -> System.out.println("ID: " + manufacturer.getId() + ", Название: " +
+                manufacturer.getName() + ", Страна: " + manufacturer.getCountry()));
+    }
+
+    private static void getAllSouvenirs() {
+        List<Souvenir> souvenirs = souvenirService.getAllSouvenirs();
+        if (souvenirs == null || souvenirs.isEmpty()) {
+            System.out.println("Сувениры не найдены.");
+            return;
+        }
+
+        souvenirs.forEach(souvenir -> System.out.println("ID: " + souvenir.getId() + ", Название: " + souvenir.getName() +
+                ", Дата выпуска: " + souvenir.getReleaseDate() + ", Цена: " + souvenir.getPrice()));
     }
 }
